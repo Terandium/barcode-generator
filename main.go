@@ -16,14 +16,18 @@ import (
 )
 
 //go:embed fonts/DejaVuSans-Bold.ttf
-var myFont []byte
+var myFont []byte // Embed the font file inside the executable
+
+// Define padding and dimensions
+const paddingTop = 10
+const width = 400
+const height = 150
 
 func main() {
-	// Check if out folder exists, if not create it
-	_, err := os.Stat("out")
-	if os.IsNotExist(err) {
+	_, err := os.Stat("out") // Get the file info for the out folder
+	if os.IsNotExist(err) {  // If the folder does not exist
 		fmt.Printf("Out folder does not exist, creating it...\n")
-		if err := os.Mkdir("out", os.ModePerm); err != nil {
+		if err := os.Mkdir("out", os.ModePerm); err != nil { // Create the folder
 			log.Fatal("failed to create out folder")
 		}
 	}
@@ -61,7 +65,7 @@ func main() {
 		wg.Add(1)
 		go func(barcode, productName string) {
 			defer wg.Done()
-			createBarcode(barcode, productName)
+			createBarcode(barcode, productName) // Create the barcode image for each entry
 		}(barcode, productName)
 	}
 
@@ -79,15 +83,10 @@ func createBarcode(barcodeData string, customText string) {
 	}
 
 	// Scale the barcode to a suitable size
-	scaledCode, err := barcode.Scale(code, 400, 100) // Use scaledCode of type barcode.Barcode
+	scaledCode, err := barcode.Scale(code, 400, 100)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// Define padding and dimensions
-	const paddingTop = 10
-	const width = 400
-	const height = 150
 
 	// Create a new image context
 	dc := gg.NewContext(width, height)
@@ -109,7 +108,7 @@ func createBarcode(barcodeData string, customText string) {
 		panic(err)
 	}
 
-	// Draw the small barcode text underneath the barcode
+	// Draw the small internal ID underneath the barcode
 	dc.SetRGB(0, 0, 0)
 	dc.SetFontFace(fontFace)
 
@@ -134,6 +133,7 @@ func createBarcode(barcodeData string, customText string) {
 	}
 }
 
+// Calculate the maximum font size for the custom text based on the available space
 func calculateMaxFontSize(dc *gg.Context, text string, maxWidth float64) float64 {
 	fontSize := 20.0
 	for {
@@ -154,6 +154,7 @@ func calculateMaxFontSize(dc *gg.Context, text string, maxWidth float64) float64
 	}
 }
 
+// Trim the barcode from the front and end to get the internal ID
 func trimBarcode(s string) string {
 	// Check if the string is long enough
 	if len(s) <= 12 {
@@ -164,6 +165,7 @@ func trimBarcode(s string) string {
 	return s[8 : len(s)-1]
 }
 
+// Load the font attached to the executable, and set the font size
 func loadFontFace(data []byte, size float64) (font.Face, error) {
 	font, err := opentype.Parse(data)
 	if err != nil {
